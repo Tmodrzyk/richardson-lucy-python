@@ -3,6 +3,15 @@ import torch.nn as nn
 import numpy as np
 
 class GaussianNoise(nn.Module):
+    """
+    Adds Gaussian noise to the input tensor.
+
+    Args:
+        sigma (float): The standard deviation of the Gaussian noise.
+
+    Returns:
+        torch.Tensor: The input tensor with Gaussian noise added.
+    """
     def __init__(self, sigma):
         super().__init__()
         
@@ -14,10 +23,25 @@ class GaussianNoise(nn.Module):
 
 class PoissonNoise(nn.Module):
     def __init__(self, rate):
+        """
+        Initializes a PoissonNoise module.
+
+        Args:
+            rate (float): The rate parameter for the Poisson distribution.
+        """
+        super().__init__()
         self.rate = rate
 
     def forward(self, data):
+        """
+        Applies Poisson noise to the input data.
 
+        Args:
+            data (torch.Tensor): The input data.
+
+        Returns:
+            torch.Tensor: The input data with Poisson noise applied.
+        """
         data = (data + 1.0) / 2.0
         data = data.clamp(0, 1)
         device = data.device

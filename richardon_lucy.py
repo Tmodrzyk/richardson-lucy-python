@@ -5,6 +5,21 @@ import matplotlib.pyplot as plt
 
 
 def richardson_lucy(observation, x_0, k, steps, clip, filter_epsilon):
+    """
+    Performs Richardson-Lucy deconvolution on an observed image.
+
+    Args:
+        observation (torch.Tensor): The observed image.
+        x_0 (torch.Tensor): The initial estimate of the deconvolved image.
+        k (torch.Tensor): The point spread function (PSF) kernel.
+        steps (int): The number of iterations to perform.
+        clip (bool): Whether to clip the deconvolved image values between -1 and 1.
+        filter_epsilon (float): The epsilon value for filtering small values in the deconvolution process.
+
+    Returns:
+        torch.Tensor: The deconvolved image.
+
+    """
     with torch.no_grad():
         # kernel = x_0_hat['kernel'].repeat(1, 3, 1, 1)
         
