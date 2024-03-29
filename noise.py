@@ -42,13 +42,11 @@ class PoissonNoise(nn.Module):
         Returns:
             torch.Tensor: The input data with Poisson noise applied.
         """
-        data = (data + 1.0) / 2.0
         data = data.clamp(0, 1)
         device = data.device
         data = data.detach().cpu()
         data = torch.from_numpy(np.random.poisson(data * 255.0 * self.rate) / 255.0 / self.rate)
-        data = data * 2.0 - 1.0
-        data = data.clamp(-1, 1)
+        data = data.clamp(0, 1)
         
-        return data.to(device)
+        return data.to(device).float()
     
