@@ -30,7 +30,7 @@ from richardson_lucy import richardson_lucy
 deconvolved_image = richardson_lucy(y, x, k, steps=20)
 ```
 
-You can also find an usage example in the ``main.ipynb`` jupyter notebook.
+You can also find an usage example in the ``greyscale.ipynb`` and ``color.ipynb`` jupyter notebooks.
 
 ## License
 

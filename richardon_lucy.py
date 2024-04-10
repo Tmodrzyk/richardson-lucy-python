@@ -26,9 +26,13 @@ def richardson_lucy(observation:torch.Tensor,
 
     """
     with torch.no_grad():
-        # kernel = x_0_hat['kernel'].repeat(1, 3, 1, 1)
-        
+
         psf = k.clone().float()
+        
+        # For RGB images
+        if(x_0.shape[1] == 3):
+            psf = psf.repeat(1, 3, 1, 1)
+            
         im_deconv = x_0.clone().float()
         k_T = torch.flip(psf, dims=[2, 3])  
 
@@ -77,10 +81,13 @@ def blind_richardson_lucy(observation:torch.Tensor,
     clip = True
 
     with torch.no_grad():
-        # For RGB images
-        # kernel = x_0_hat['kernel'].repeat(1, 3, 1, 1)
-        
+
         k = k_0.clone().float()
+        
+        # For RGB images
+        if(x_0.shape[1] == 3):
+            k = k.repeat(1, 3, 1, 1)
+            
         im_deconv = x_0.clone().float()
         k_T = torch.flip(k, dims=[2, 3])  
         im_deconv_T = torch.flip(im_deconv, dims=[2, 3])

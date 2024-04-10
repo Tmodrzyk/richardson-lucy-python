@@ -13,14 +13,13 @@ class GaussianBlur(nn.Module):
         std (float): The standard deviation of the Gaussian distribution. Default is 3.0.
     """
 
-    def __init__(self, kernel_size=31, std=3.0):
+    def __init__(self, kernel_size=31, std=3.0, channels=1):
         super().__init__()
         
         self.kernel_size = kernel_size
         self.std = std
         self.seq = nn.Sequential(
-            nn.Conv2d(1, 1, self.kernel_size, stride=1, padding=self.kernel_size//2, padding_mode='replicate', bias=False, groups=1)
-            # nn.Conv2d(3, 3, self.kernel_size, stride=1, padding=self.kernel_size//2, padding_mode='replicate', bias=False, groups=3)
+            nn.Conv2d(channels, channels, self.kernel_size, stride=1, padding=self.kernel_size//2, padding_mode='replicate', bias=False, groups=channels)
         )
 
         self.weights_init()
@@ -35,6 +34,9 @@ class GaussianBlur(nn.Module):
         Returns:
             torch.Tensor: The blurred output tensor.
         """
+        
+        print(x.shape)
+        print()
         return self.seq(x)
 
     def weights_init(self):
