@@ -35,8 +35,6 @@ class GaussianBlur(nn.Module):
             torch.Tensor: The blurred output tensor.
         """
         
-        print(x.shape)
-        print()
         return self.seq(x)
 
     def weights_init(self):

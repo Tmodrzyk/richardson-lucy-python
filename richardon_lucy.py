@@ -56,6 +56,8 @@ def blind_richardson_lucy(observation:torch.Tensor,
                           x_0:torch.Tensor, 
                           k_0:torch.Tensor, 
                           steps:int, 
+                          x_steps:int,
+                          k_steps:int,
                           clip:bool, 
                           filter_epsilon:float):
     """
@@ -74,24 +76,18 @@ def blind_richardson_lucy(observation:torch.Tensor,
         torch.Tensor: The estimated blur kernel.
     """
     
-    k_steps = 1
-    im_steps = 1
-
-    filter_epsilon = 1e-12
-    clip = True
+    observation_L = torch.sum(observation, dim=1, keepdim=True)
 
     with torch.no_grad():
 
         k = k_0.clone().float()
-        
-        # For RGB images
-        if(x_0.shape[1] == 3):
-            k = k.repeat(1, 3, 1, 1)
             
         im_deconv = x_0.clone().float()
+        im_deconv_L = torch.sum(im_deconv, dim=1, keepdim=True)
+        
         k_T = torch.flip(k, dims=[2, 3])  
-        im_deconv_T = torch.flip(im_deconv, dims=[2, 3])
-
+        im_deconv_L_T = torch.flip(im_deconv_L, dims=[2, 3])
+        
         eps = 1e-12
         pad_im = (k.size(2) // 2, k.size(2) // 2, k.size(3) // 2, k.size(3) // 2)
         pad_k = (im_deconv.size(2) // 2, im_deconv.size(2) // 2, im_deconv.size(3) // 2, im_deconv.size(3) // 2)
@@ -103,14 +99,17 @@ def blind_richardson_lucy(observation:torch.Tensor,
             
             for m in range(k_steps):      
                 
-                conv11 = F.conv2d(F.pad(im_deconv, pad_im, mode='replicate'), k) + eps
+                k = k.swapaxes(0, 1)
+                conv11 = F.conv2d(F.pad(im_deconv_L, pad_im, mode='replicate'), k) + eps
                 
                 if filter_epsilon:
-                    relative_blur = torch.where(conv11 < filter_epsilon, 0.0, observation / conv11)
+                    relative_blur = torch.where(conv11 < filter_epsilon, 0.0, observation_L / conv11)
                 else:
-                    relative_blur = observation / conv11
+                    relative_blur = observation_L / conv11
                 
-                im_mean = F.conv2d(torch.ones_like(F.pad(k, pad_k)), im_deconv_T)
+                k = k.swapaxes(0, 1)
+                im_deconv_L_T = im_deconv_L_T.swapaxes(0, 1)
+                im_mean = F.conv2d(torch.ones_like(F.pad(k, pad_k)), im_deconv_L_T)
                 # im_mean = F.conv2d(F.pad(torch.ones_like(k), pad_k, mode='replicate'), im_deconv_T)
                 
                 if filter_epsilon:
@@ -118,21 +117,26 @@ def blind_richardson_lucy(observation:torch.Tensor,
                 else:
                     k /= im_mean
 
-                conv12 = F.conv2d(F.pad(relative_blur, pad_k, mode='replicate'), im_deconv_T) + eps
+                conv12 = F.conv2d(F.pad(relative_blur, pad_k, mode='replicate'), im_deconv_L_T) + eps
                 conv12 = conv12[:,:,
                             conv12.size(2) // 2 - k.size(2) // 2:conv12.size(2) // 2 + k.size(2) // 2 + 1,
                             conv12.size(3) // 2 - k.size(3) // 2:conv12.size(3) // 2 + k.size(3) // 2 + 1]
                 k *= conv12
-
-                # k *= F.conv2d(F.pad(relative_blur, pad_im, mode='replicate'), im_deconv_T) + eps
-
                 k_T = torch.flip(k, dims=[2, 3]) 
             
-            # Image estimation
-            
-            for n in range(im_steps):
+
+            # For RGB images
+            if(x_0.shape[1] == 3):
+                k = k.repeat(1, 3, 1, 1)
+                k_T = k_T.repeat(1, 3, 1, 1)
                 
-                conv21 = F.conv2d(F.pad(im_deconv, pad_im, mode='replicate'), k) + eps
+            # Image estimation
+
+            for n in range(x_steps):
+                
+                k = k.swapaxes(0, 1)
+                
+                conv21 = F.conv2d(F.pad(im_deconv, pad_im, mode='replicate'), k, groups=3) + eps
                 
                 if filter_epsilon:
                     relative_blur = torch.where(conv21 < filter_epsilon, 0.0, observation / conv21)
@@ -140,17 +144,24 @@ def blind_richardson_lucy(observation:torch.Tensor,
                     relative_blur = observation / conv21
                 
                 # k_mean = F.conv2d(F.pad(torch.ones_like(im_deconv), pad_im, mode='replicate'), k_T)
-                k_mean = F.conv2d(torch.ones_like(F.pad(im_deconv, pad_im)), k_T)
+                k_T = k_T.swapaxes(0, 1)
+                k_mean = F.conv2d(torch.ones_like(F.pad(im_deconv, pad_im)), k_T, groups=3)
                 if filter_epsilon:
                     im_deconv = torch.where(k_mean < filter_epsilon, 0.0, im_deconv / k_mean)
                 else:
                     im_deconv /= k_mean
                 
-                im_deconv *= F.conv2d(F.pad(relative_blur, pad_im, mode='replicate'), k_T) + eps
+                im_deconv *= F.conv2d(F.pad(relative_blur, pad_im, mode='replicate'), k_T, groups=3) + eps
+                
+                k_T = k_T.swapaxes(0, 1)
+                k = k.swapaxes(0, 1)
+            k = k[:, 0:1, :, :]
+            k_T = k_T[:, 0:1, :, :]
+            im_deconv_L = torch.sum(im_deconv, dim=1, keepdim=True)
 
             if clip:
                 im_deconv = torch.clamp(im_deconv, 0, 1)
                 
             im_deconv_T = torch.flip(im_deconv, dims=[2, 3])
-            
+                
     return im_deconv, k
