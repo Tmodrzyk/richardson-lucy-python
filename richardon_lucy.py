@@ -51,6 +51,8 @@ def richardson_lucy(observation:torch.Tensor,
             if tv:
                 if(x_0.shape[1] == 3):
                     multichannel = True
+                else:
+                    multichannel = False
                     
                 im_deconv = denoise_tv_chambolle_torch(im_deconv, weight=0.02, n_iter_max=50, multichannel=multichannel)
                 
@@ -167,7 +169,9 @@ def blind_richardson_lucy(observation:torch.Tensor,
                 if(tv):
                     if(x_0.shape[1] == 3):
                         multichannel = True
-                    
+                    else:
+                        multichannel = False
+                        
                     im_deconv = denoise_tv_chambolle_torch(im_deconv, weight=0.02, n_iter_max=50, multichannel=multichannel)
                 
                 k_T = k_T.swapaxes(0, 1)
