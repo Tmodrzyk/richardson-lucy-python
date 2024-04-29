@@ -47,6 +47,7 @@ class GaussianBlur(nn.Module):
         k = torch.from_numpy(k)
         
         self.k = k
+        
         for name, f in self.named_parameters():
             f.data.copy_(k)
 
