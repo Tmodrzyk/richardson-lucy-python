@@ -1,3 +1,7 @@
+# This code is mostly based on the code from the following repository:
+# https://github.com/LeviBorodenko/motionblur
+# It was adapted by Thibaut Modrzyk to output torch tensors instead of PIL images
+
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 from numpy.random import uniform, triangular, beta

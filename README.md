@@ -27,10 +27,12 @@ The core functionality is provided by the ``richardson_lucy`` function. To use i
 ```python
 from richardson_lucy import richardson_lucy
 
-deconvolved_image = richardson_lucy(y, x, k, steps=20)
+deconvolved_image = richardson_lucy(y, x, k, steps=20, tv=False)
 ```
 
 You can also find an usage example in the ``greyscale.ipynb`` and ``color.ipynb`` jupyter notebooks.
+To test the algorithm, several types of blur are implemented such as Gaussian blur and motion blur (thanks to the code from [this repository](https://github.com/LeviBorodenko/motionblur)).
+TV regularization is also implemented using a torch implementation of Chambolle-Pock denoising.
 
 ## License
 
